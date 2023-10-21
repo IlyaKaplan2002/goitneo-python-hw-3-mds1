@@ -1,41 +1,39 @@
+def input_error(func):
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValueError:
+            return "Give me name and phone please."
+        except IndexError:
+            return "Give me a name please"
+
+    return inner
+
+
 def parse_input(user_input):
-    try:
-        cmd, *args = user_input.split()
-        cmd = cmd.strip().lower()
-        return cmd, *args
-    except:
-        pass
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
 
 
+@input_error
 def add_contact(args, contacts):
-    name = ""
-    phone = ""
-    try:
-        name, phone = args
-    except:
-        return "Invalid args."
+    name, phone = args
     contacts[name] = phone
     return "Contact added."
 
 
+@input_error
 def get_contact(args, contacts):
-    name = ""
-    try:
-        name = args[0]
-    except:
-        return "Invalid args."
+    name = args[0]
     if not contacts.get(name):
         return "Contact doesn't exist."
     return f"{name}: {contacts[name]}"
 
 
+@input_error
 def change_contact(args, contacts):
-    name = ""
-    phone = ""
-    try:
-        name, phone = args
-    except:
-        return "Invalid args."
+    name, phone = args
     if not contacts.get(name):
         return "Contact doesn't exist."
     contacts[name] = phone
