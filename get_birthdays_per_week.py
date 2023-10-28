@@ -38,7 +38,10 @@ def get_birthdays_per_week(users):
     keys = list(res.keys())
     keys.sort(key=getWeekdaySortKey)
 
-    for key in keys:
-        print(f"{key[0]}: {', '.join(res[key])}")
+    if len(keys):
+        for key in keys:
+            print(f"{key[0]}: {', '.join(res[key])}")
+    else:
+        print("There won't be birthdays on the next week")
 
     return res

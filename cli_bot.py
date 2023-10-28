@@ -1,11 +1,36 @@
+from cli_bot_classes import (
+    AddressBook,
+    Record,
+    InvalidNameError,
+    InvalidPhoneError,
+    InvalidBirthdayError,
+    PhoneNotFoundError,
+    RecordNotFoundError,
+)
+
+
 def input_error(func):
     def inner(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            data = func(*args, **kwargs)
+            if data:
+                print(data)
         except ValueError:
-            return "Give me name and phone please."
+            print("Give me name and phone/birthday please.")
         except IndexError:
-            return "Give me a name please"
+            print("Give me a name please")
+        except InvalidNameError:
+            print("Invalid name")
+        except InvalidPhoneError:
+            print("Invalid phone number")
+        except InvalidBirthdayError:
+            print("Invalid birthday date")
+        except PhoneNotFoundError:
+            print("Phone not found")
+        except RecordNotFoundError:
+            print("Contact not found")
+        except Exception:
+            print("Unknown error occurred")
 
     return inner
 
@@ -17,38 +42,78 @@ def parse_input(user_input):
 
 
 @input_error
-def add_contact(args, contacts):
+def add_contact(args, contacts: AddressBook):
     name, phone = args
-    contacts[name] = phone
+    record = Record(name)
+    record.add_phone(phone)
+    contacts.add_record(record)
     return "Contact added."
 
 
 @input_error
-def get_contact(args, contacts):
-    name = args[0]
-    if not contacts.get(name):
-        return "Contact doesn't exist."
-    return f"{name}: {contacts[name]}"
-
-
-@input_error
-def change_contact(args, contacts):
+def change_contact(args, contacts: AddressBook):
     name, phone = args
-    if not contacts.get(name):
+    contact: Record = contacts.find(name)
+
+    if not contact:
         return "Contact doesn't exist."
-    contacts[name] = phone
+
+    [oldPhone, *_] = contact.get_phones_strings()
+    contact.edit_phone(oldPhone, phone)
     return "Contact changed."
 
 
-def get_all_contacts(contacts):
-    for name, phone in contacts.items():
-        print(f"{name}: {phone}")
+@input_error
+def get_contact(args, contacts: AddressBook):
+    name = args[0]
+    contact: Record = contacts.find(name)
+
+    if not contact:
+        return "Contact doesn't exist."
+
+    [phone, *_] = contact.get_phones_strings()
+    return f"{name}: {phone}"
+
+
+@input_error
+def get_all_contacts(contacts: AddressBook):
+    for item in contacts.get_all_strings():
+        print(item)
 
     return "Contacts showed."
 
 
+@input_error
+def add_birthday(args, contacts: AddressBook):
+    name, birthday = args
+    contact: Record = contacts.find(name)
+
+    if not contact:
+        return "Contact doesn't exist."
+
+    contact.add_birthday(birthday)
+
+    return "Birthday added"
+
+
+@input_error
+def get_birthday(args, contacts: AddressBook):
+    name = args[0]
+    contact: Record = contacts.find(name)
+
+    if not contact:
+        return "Contact doesn't exist."
+
+    print(f"{name}: {contact.get_birthday()}")
+
+
+@input_error
+def get_birthdays_per_week(contacts: AddressBook):
+    contacts.get_birthdays_per_week()
+
+
 def main():
-    contacts = {}
+    contacts = AddressBook()
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command: ")
@@ -65,13 +130,19 @@ def main():
         elif command == "hello":
             print("How can I help you?")
         elif command == "add":
-            print(add_contact(args, contacts))
-        elif command == "phone":
-            print(get_contact(args, contacts))
+            add_contact(args, contacts)
         elif command == "change":
-            print(change_contact(args, contacts))
+            change_contact(args, contacts)
+        elif command == "phone":
+            get_contact(args, contacts)
         elif command == "all":
             get_all_contacts(contacts)
+        elif command == "add-birthday":
+            add_birthday(args, contacts)
+        elif command == "show-birthday":
+            get_birthday(args, contacts)
+        elif command == "birthdays":
+            get_birthdays_per_week(contacts)
         else:
             print("Invalid command.")
 
